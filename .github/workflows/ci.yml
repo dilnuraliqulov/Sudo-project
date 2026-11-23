@@ -1,0 +1,67 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt -c devops/constraints.txt
+
+      - name: Run pytest
+        run: pytest tests -v
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Test, lint and build
+        working-directory: frontend
+        run: npm run check
+
+  deploy:
+    name: Deploy
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images and start the stack
+        env:
+          SECRET_KEY: ci-only-secret-key-not-used-for-a-real-deployment
+        run: docker compose up --build --wait --wait-timeout 300 web
+
+      - name: Check the website and the API
+        run: |
+          curl -fsS http://localhost:8000/ > /dev/null
+          curl -fsS http://localhost:8000/api/health
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans
