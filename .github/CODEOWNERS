@@ -1,0 +1,14 @@
+# Default reviewer for the repository
+* @dilnuraliqulov
+
+# Route frontend changes to Bahadur
+/frontend/ @BahadurNUU
+
+# Route backend/API changes to Dilnur
+/backend/ @dilnuraliqulov
+
+# Route infrastructure/Docker changes to Nozimjon
+/devops/ @nozimjonfribble
+
+# Route testing and scripts to Alijon
+/tests/ @AlijonTursunboyev
