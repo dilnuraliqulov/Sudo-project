@@ -49,12 +49,12 @@ jobs:
     needs: [backend, frontend]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ci-only-secret-key-not-used-for-a-real-deployment
     steps:
       - uses: actions/checkout@v4
 
       - name: Build images and start the stack
-        env:
-          SECRET_KEY: ci-only-secret-key-not-used-for-a-real-deployment
         run: docker compose up --build --wait --wait-timeout 300 web
 
       - name: Check the website and the API
